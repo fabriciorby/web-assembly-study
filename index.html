@@ -134,12 +134,12 @@ int main()
 
         <p>A forma mais simples de importá-lo no browser é a seguinte:</p>
 
-        <pre><code class="javascript language-javascript">(async () =&amp;amp;amp;gt; {
+        <pre><code class="javascript language-javascript">(async () =&gt; {
     const importObject = {
             env: {
-            _two_alerts: _ =&amp;amp;amp;gt; { },
-            _emscripten_asm_const_i: _ =&amp;amp;amp;gt; { },
-            _emscripten_run_script: _ =&amp;amp;amp;gt; { },
+            _two_alerts: _ =&gt; { },
+            _emscripten_asm_const_i: _ =&gt; { },
+            _emscripten_run_script: _ =&gt; { },
             memory: new WebAssembly.Memory({
                 initial: 256,
                 maximum: 256
@@ -180,13 +180,13 @@ function _two_alerts() { alert("hai"); alert("bai") }
 function _emscripten_run_script(ptr) { eval(UTF8ToString(ptr)) }
 </code></pre>
 
-        <pre><code class="javascript language-javascript">(async () =&amp;amp;amp;gt; {
+        <pre><code class="javascript language-javascript">(async () =&gt; {
     const ASM_CONSTS = [function () { x = 1; console.log(x) }, function () { console.log(x) }];
     const importObject = {
         env: {
-            _two_alerts: _ =&amp;amp;amp;gt; { alert("hai"); alert("bai") },
-            _emscripten_asm_const_i: _ =&amp;amp;amp;gt; { ASM_CONSTS[_]() },
-            _emscripten_run_script: _ =&amp;amp;amp;gt; { eval(_) },
+            _two_alerts: _ =&gt; { alert("hai"); alert("bai") },
+            _emscripten_asm_const_i: _ =&gt; { ASM_CONSTS[_]() },
+            _emscripten_run_script: _ =&gt; { eval(_) },
             memory: new WebAssembly.Memory({
                 initial: 256,
                 maximum: 256
@@ -214,7 +214,7 @@ function _emscripten_run_script(ptr) { eval(UTF8ToString(ptr)) }
 
         <p>Para ter acesso às outras funções do código-fonte em C, entre no console do Chrome e digite:</p>
 
-        <pre><code>Module.mult(5, 5);
+        <pre><code>Module._mult(5, 5);
 
 25
 </code></pre>
@@ -234,12 +234,11 @@ function _emscripten_run_script(ptr) { eval(UTF8ToString(ptr)) }
         <p>Para algo mais robusto em WebAssembly, por favor utilize o .js compilado.</p>
 
         <p>No momento o desenvolvimento de WebAssembly está muito complicada e, a não ser que haja uma tarefa feita pelo
-            navegador que <strong>realmente</strong> seja necessária um aumento no tempo de processamento, o WebAssembly
+            navegador que <strong>realmente</strong> seja necessária uma otimização no tempo de processamento, o WebAssembly
             não
             atende.</p>
 
-        <p>Atualmente, a dificuldade para instalação, compilação e codificação não valem a pena para o mercado. Até para
-            pesquisar sobre os erros que eu estava tomando foi <strong>muito</strong> complicado.</p>
+        <p>Atualmente, a dificuldade para instalação, compilação e codificação majoritariamente não valem a pena e, portanto, é bobagem dizer que o javascript irá morrer.</p>
 
         <p>Além disso, para você ter uma ideia, a pasta do meu compilador, após instalação, está com
             <strong>1,85GB</strong>

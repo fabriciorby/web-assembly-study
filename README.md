@@ -150,7 +150,7 @@ Assim que a tela for carregada será gerado um objeto global chamado `Module`, e
 
 Para ter acesso às outras funções do código-fonte em C, entre no console do Chrome e digite:
 ```
-Module.mult(5, 5);
+Module._mult(5, 5);
 
 25
 ```
@@ -164,9 +164,9 @@ Para fazer chamadas do código-fonte em C via `EM_JS`/`EM_ASM`/`emscripten_run_s
 
 Para algo mais robusto em WebAssembly, por favor utilize o .js compilado.
 
-No momento o desenvolvimento de WebAssembly está muito complicada e, a não ser que haja uma tarefa feita pelo navegador que **realmente** seja necessária um aumento no tempo de processamento, o WebAssembly não atende.
+No momento o desenvolvimento de WebAssembly está muito complicada e, a não ser que haja uma tarefa feita pelo navegador que **realmente** seja necessária uma otimização no tempo de processamento, o WebAssembly não atende.
 
-Atualmente, a dificuldade para instalação, compilação e codificação não valem a pena para o mercado. Até para pesquisar sobre os erros que eu estava tomando foi **muito** complicado.
+Atualmente, a dificuldade para instalação, compilação e codificação majoritariamente não valem a pena e, portanto, é bobagem dizer que o javascript irá morrer.
 
 Além disso, para você ter uma ideia, a pasta do meu compilador, após instalação, está com **1,85GB** de espaço. Ok que talvez eu não esteja com as configurações mais ótimas para o desenvolvimento, entretanto, mesmo assim é muita coisa para um compilador.
 
