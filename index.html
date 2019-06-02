@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.8/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/cpp.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <title>WebAssembly - Hello World</title>
 </head>
 <body>
@@ -26,5 +33,235 @@
             result = instance.exports;
         })();
     </script>
+
+    <div class='container'>
+        <h1 id="webassembly">WebAssembly</h1>
+
+        <h2 id="oqueisso">O que é isso?</h2>
+
+        <p><a href="https://braziljs.org/artigos/iniciando-com-webassembly-parte-1/">https://braziljs.org/artigos/iniciando-com-webassembly-parte-1/</a></p>
+
+        <h2 id="meustestes">Meus testes</h2>
+
+        <p>Após <strong>muita dificuldade</strong>, consegui instalar o compilador de C/C++ para .wasm/.js, que foi o <a
+                href="https://emscripten.org/index.html">emscripten</a>.</p>
+
+        <p>Depois de instalado, tive <strong>muita dificuldade</strong> para conseguir compilar meu arquivo, seguindo o
+            tutorial do próprio <a href="https://webassembly.org/getting-started/developers-guide/">WebAssembly</a>.</p>
+
+        <p>Após conseguir compilar e subir meu servidor http, vi ele rodando no html proposto e então fiquei feliz.</p>
+
+        <p>Essa felicidade não durou muito, pois vi que minha página html importava um <code>.js</code>, e não um
+            <code>.wasm</code>, o que não faz sentido nenhum de acordo com o que eu vi <a
+                href="https://braziljs.org/artigos/iniciando-com-webassembly-parte-2/">aqui</a>.</p>
+
+        <p>Creio que por ser uma tecnologia relativamente nova, há muitos artigos escritos que estão desatualizados e,
+            vendo
+            agora, esse foi um dos motivos para a minha frustração nessa jornada.</p>
+
+        <p>Assim começa a minha saga para tentar importar um <code>.wasm</code> ao invés do <code>.js</code>, e foi
+            assim
+            que me deparei com incontáveis erros no meu console do Chrome.</p>
+
+        <p>Mas eu consegui!</p>
+
+        <p><strong>Observação:</strong> Todo o código disponibilizado aqui está nessa página, caso tenha algo relacionado com ver o console do Chrome, basta apertar F12 e você verá acontecer.</p>
+
+        <h3 id="meucdigofonte">Meu código-fonte</h3>
+
+        <pre><code class="C language-C">#include &lt;stdio.h&gt;
+#include &lt;emscripten.h&gt;
+
+EMSCRIPTEN_KEEPALIVE
+int sum(int n1, int n2)
+{
+    return n1 + n2;
+}
+EMSCRIPTEN_KEEPALIVE
+int sub(int n1, int n2)
+{
+    return n1 - n2;
+}
+EMSCRIPTEN_KEEPALIVE
+int mult(int n1, int n2)
+{
+    return n1 * n2;
+}
+EMSCRIPTEN_KEEPALIVE
+int divide(int n1, int n2)
+{
+    return n1 / n2;
+}
+
+EM_JS(void, two_alerts, (), {
+    alert('hai');
+    alert('bai');
+});
+
+EMSCRIPTEN_KEEPALIVE
+int main()
+{
+    two_alerts();
+    emscripten_run_script("alert('I have been called from C!')");
+    EM_ASM(
+        x = 1;
+        console.log(x);
+    );
+    EM_ASM(
+        console.log(x);
+    );
+}
+</code></pre>
+
+        <h3 id="wasmpuro">wasm puro</h3>
+
+        <p>Após inúmeros testes e pesquisas cheguei no resultado que o caminho mais curto para conseguir utilizá-lo em
+            seu
+            browser é compilá-lo da seguinte forma: <code>emcc hello.c -Os -o hello-wasm.wasm</code></p>
+
+        <p><strong>Importante</strong>: Consegui compilar minhas funções pois utilizei a notação
+            <code>EMSCRIPTEN_KEEPALIVE</code> logo antes das minhas funções, caso contrário o compilador corta fora
+            minhas
+            funções por default. Outra forma de fazer isso é adicionando a flag <code>EXPORTED_FUNCTIONS</code>. Nesse
+            caso,
+            se eu não tivesse a notação, minha compilação deveria ser chamada como:
+            <code>emcc hello.c -Os -o hello-wasm.wasm EXPORTED_FUNCTIONS='["_main", "_sum", "_sub", "_divide", "_mult"]'</code>.
+        </p>
+
+        <p>Para que funcione, é necessário subir um servidor http e, por sorte, nosso compilador pode fazer isso por nós
+            via
+            <code>emrun --no_browser --port 8080 .</code></p>
+
+        <p>A forma mais simples de importá-lo no browser é a seguinte:</p>
+
+        <pre><code class="javascript language-javascript">(async () =&amp;amp;amp;gt; {
+    const importObject = {
+            env: {
+            _two_alerts: _ =&amp;amp;amp;gt; { },
+            _emscripten_asm_const_i: _ =&amp;amp;amp;gt; { },
+            _emscripten_run_script: _ =&amp;amp;amp;gt; { },
+            memory: new WebAssembly.Memory({
+                initial: 256,
+                maximum: 256
+            })
+        }
+    };
+    const {instance} = await WebAssembly.instantiateStreaming(fetch('hello-wasm.wasm'), importObject);
+    result = instance.exports;
+})();
+</code></pre>
+
+        <p>Por que essas funções vazias? São funções que estão sendo chamados pelo meu arquivo compilado
+            <code>.wasm</code>
+            que eu não possuo definição no momento de compilação, então tenho que gerar esse esqueleto e adicionar
+            alguma
+            coisa, pois senão ele não é instanciado e gera um erro chato do tipo
+            <code>function import requires a callable</code>.</p>
+
+        <p>Após carregar a página, é só entrar no console do Chrome e mandar os comandos para usar suas funções em
+            WebAssembly:</p>
+
+        <pre><code>result._mult(5, 5);
+
+25
+</code></pre>
+
+        <p>Entretanto se eu tento executar minha <code>result._main()</code>, nada do que eu escrevi no meu código-fonte
+            em
+            C ocorre...</p>
+
+        <p>Isso é porque essas funções EM<em>ASM, EM</em>JS e emscripten<em>run</em>script são geradas no arquivo
+            <code>.js</code> que vem junto com a compilação e, se eu realmente quiser utilizá-las sem ter que importar o
+            .js, terei que pegar emprestado do <code>.js</code> e reescrevê-las no meu <code>importObject</code>:</p>
+
+        <pre><code class="javascript language-javascript">var ASM_CONSTS = [function () { x = 1; console.log(x) }, function () { console.log(x) }];
+function _emscripten_asm_const_i(code) { return ASM_CONSTS[code]() }
+function _two_alerts() { alert("hai"); alert("bai") }
+function _emscripten_run_script(ptr) { eval(UTF8ToString(ptr)) }
+</code></pre>
+
+        <pre><code class="javascript language-javascript">(async () =&amp;amp;amp;gt; {
+    const ASM_CONSTS = [function () { x = 1; console.log(x) }, function () { console.log(x) }];
+    const importObject = {
+        env: {
+            _two_alerts: _ =&amp;amp;amp;gt; { alert("hai"); alert("bai") },
+            _emscripten_asm_const_i: _ =&amp;amp;amp;gt; { ASM_CONSTS[_]() },
+            _emscripten_run_script: _ =&amp;amp;amp;gt; { eval(_) },
+            memory: new WebAssembly.Memory({
+                initial: 256,
+                maximum: 256
+            })
+        }
+    };
+    const { instance } = await WebAssembly.instantiateStreaming(fetch('hello-wasm.wasm'), importObject);
+    result = instance.exports;
+})();
+</code></pre>
+
+        <p>Pronto! Apesar de não ser <strong>nada prático</strong>, está funcionando da forma como deveria estar.</p>
+
+        <h3 id="importandoviajs">Importando via <code>.js</code></h3>
+
+        <p>Para compilá-lo via <code>.js</code>, utilizei o seguinte comando:
+            <code>emcc hello.c -Os -o hello.js -s WASM=1</code></p>
+
+        <p>A forma mais simples de importar ao browser é a seguinte:
+            <code>&lt;script async src="hello.js"&gt;&lt;/script&gt;</code></p>
+
+        <p>Assim que a tela for carregada será gerado um objeto global chamado <code>Module</code>, e o
+            <code>_main()</code>
+            será executado.</p>
+
+        <p>Para ter acesso às outras funções do código-fonte em C, entre no console do Chrome e digite:</p>
+
+        <pre><code>Module.mult(5, 5);
+
+25
+</code></pre>
+
+        <p>Pronto! Seu WebAssembly está funcionando com um <code>.js</code> auxiliar.</p>
+
+        <h2 id="concluso">Conclusão</h2>
+
+        <p>Há duas formas de utilizar o WebAssembly, importando o .wasm diretamente no browser via
+            <code>WebAssembly.instantiateStreaming(fetch('hello.wasm'), importObject);</code> e a mais simples e útil,
+            importando o .js com <code>&lt;script async src="hello.js"&gt;&lt;/script&gt;</code>.</p>
+
+        <p>Para fazer chamadas do código-fonte em C via
+            <code>EM_JS</code>/<code>EM_ASM</code>/<code>emscripten_run_script()</code> pelo <code>.wasm</code> puro, é
+            necessário auxílio do <code>.js</code>, nem que seja para pegar as funções "emprestadas".</p>
+
+        <p>Para algo mais robusto em WebAssembly, por favor utilize o .js compilado.</p>
+
+        <p>No momento o desenvolvimento de WebAssembly está muito complicada e, a não ser que haja uma tarefa feita pelo
+            navegador que <strong>realmente</strong> seja necessária um aumento no tempo de processamento, o WebAssembly
+            não
+            atende.</p>
+
+        <p>Atualmente, a dificuldade para instalação, compilação e codificação não valem a pena para o mercado. Até para
+            pesquisar sobre os erros que eu estava tomando foi <strong>muito</strong> complicado.</p>
+
+        <p>Além disso, para você ter uma ideia, a pasta do meu compilador, após instalação, está com
+            <strong>1,85GB</strong>
+            de espaço. Ok que talvez eu não esteja com as configurações mais ótimas para o desenvolvimento, entretanto,
+            mesmo assim é muita coisa para um compilador.</p>
+
+        <h3 id="linksteis">Links úteis</h3>
+
+        <p>Links úteis já que a documentação não é muito gentil</p>
+        <ul>
+            <li><a
+                    href="https://ariya.io/2019/05/basics-of-memory-access-in-webassembly">https://ariya.io/2019/05/basics-of-memory-access-in-webassembly</a>
+            </li>
+
+            <li><a
+                    href="https://agniva.me/wasm/2018/05/17/wasm-hard-way.html">https://agniva.me/wasm/2018/05/17/wasm-hard-way.html</a>
+            </li>
+
+            <li><a
+                    href="https://marcoselvatici.github.io/WASM_tutorial/index.html">https://marcoselvatici.github.io/WASM_tutorial/index.html</a>
+            </li>
+        </ul>
+    </div>
 </body>
 </html>
