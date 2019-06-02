@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>WebAssembly - Hello World</title>
+</head>
+<body>
+    <script async src="hello.js"></script>
+    <script>
+        (async () => {
+            const ASM_CONSTS = [function () { x = 1; console.log(x) }, function () { console.log(x) }];
+            const importObject = {
+                env: {
+                    _two_alerts: _ => { alert("hai"); alert("bai") },
+                    _emscripten_asm_const_i: _ => { ASM_CONSTS[_]() },
+                    _emscripten_run_script: _ => { eval(_) },
+                    memory: new WebAssembly.Memory({
+                        initial: 256,
+                        maximum: 256
+                    })
+                }
+            };
+            const { instance } = await WebAssembly.instantiateStreaming(fetch('hello-wasm.wasm'), importObject);
+            result = instance.exports;
+        })();
+    </script>
+</body>
+</html>
