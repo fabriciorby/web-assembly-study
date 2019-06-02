@@ -1,5 +1,7 @@
 # WebAssembly
 
+Para ver no browser e conseguir ver o console do Chrome em tempo real: https://fabriciorby.me/web-assembly-study/
+
 ## O que é isso?
 
 https://braziljs.org/artigos/iniciando-com-webassembly-parte-1/
